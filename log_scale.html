@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="./d3.js"></script>
+</head>
+<body>
+  <svg width="960" height="500"></svg>
+  <script>
+    var svg = d3.select('svg');
+    var margin = {top: 30, right: 30, bottom: 40, left: 50};
+    var timeParse = d3.timeParse('%d-%b-%y');
+    var width = svg.attr('width') - margin.left - margin.right;
+    var height = svg.attr('height') - margin.top - margin.bottom;
+    var chart = svg.append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    d3.tsv('./log_scale.tsv').then(function(data) {
+      var baseValue = data[0].close;
+      data.forEach(function(d) {
+        d.date = timeParse(d.date);
+        d.ratio = d.close - baseValue
+      });
+      var xScale = d3.scaleTime()
+      .domain(d3.extent(data, function(d) {
+        return d.date;
+      }))
+      .range([0, width]);
+      var xAxis = d3.axisBottom(xScale)
+      // .ticks(d3.timeMonth.every(5))
+      .tickValues([data[0].date, data[50].date])
+      .tickFormat;
+      
+      chart.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', 'translate(0, ' + height + ')')
+      .call(xAxis);
+    });
+  </script>
+</body>
+</html>

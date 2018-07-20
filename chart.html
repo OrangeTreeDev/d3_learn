@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="./d3.js"></script>
+</head>
+<body>
+  <h1>Bar chart with label using d3.js</h1>
+  <svg class="bar-chart"></svg>
+</body>
+</html>
+<script>
+  var svgWidth = 800;
+  var svgHeight = 500;
+  var dataset = [80, 100, 56, 120, 180, 30, 40, 120, 160];
+  var margin = {top: 20, right: 20, bottom: 20, left: 20};
+  var chartWidth = svgWidth - margin.left - margin.right;
+  var chartHeight = svgHeight - margin.top - margin.bottom;
+  var barWidth = chartWidth / dataset.length;
+
+  var xScale = d3.scaleTime()
+  .domain([new Date(2017, 7, 7), new Date(2018, 7, 7)])
+  .range([0, chartWidth]);
+  var xAxis = d3.axisBottom(xScale)
+  .ticks(d3.timeYear);
+
+  var yScale = d3.scaleLinear()
+  .domain([0 ,d3.max(dataset)])
+  .range([0, chartHeight]);
+  var yAxis = d3.axisLeft(yScale);
+
+  var svg = d3.select('.bar-chart')
+  .attr('width', svgWidth)
+  .attr('height', svgHeight);
+
+  svg.append('g')
+  .attr('transform', 'translate(' + margin.left + ',' + (svgHeight - margin.bottom) + ')')
+  .call(xAxis);
+  svg.append('g')
+  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+  .call(yAxis);
+
+  var chart = svg.append('g')
+  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+  var bar = chart.selectAll('rect')
+  .data(dataset)
+  .enter()
+  .append('rect')
+  .attr('y', function(d) {
+    return chartHeight - yScale(d);
+  })
+  .attr('x', function(d, i) {
+    return barWidth * i;
+  })
+  .attr('height', function(d) {
+    return yScale(d);
+  })
+  .attr('width', barWidth - 2)
+  .attr('fill', '#115D8C');
+
+  // var label = chart.selectAll('text')
+  // .data(dataset)
+  // .enter()
+  // .append('text')
+  // .attr('y', function(d) {
+  //   return svgHeight - yScale(d) - 2;
+  // })
+  // .attr('x', function(d, i) {
+  //   return barWidth * i;
+  // })
+  // .attr('fill', '#A64C38')
+  // .text(function(d) {
+  //   return d;
+  // });
+</script>

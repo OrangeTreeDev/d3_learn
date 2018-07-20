@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="./d3.js"></script>
+  <style>
+    .label {
+      text-anchor: middle;
+    }
+  </style>
+</head>
+<body>
+  <svg width="960" height="500"></svg>
+  <script>
+    var svg = d3.select('svg');
+    var margin = {top: 30, right: 50, bottom: 30, left: 30};
+    var width = svg.attr('width') - margin.left - margin.right;
+    var height = svg.attr('height') - margin.top - margin.bottom;
+    var labelPadding = 3;
+
+    var chart = svg.append('g')
+    .attr('transform', 'translate('+margin.left+','+margin.top+')');
+
+    var parseTime = d3.timeParse('%Y');
+    d3.tsv('./inline_label_data.tsv', function(d) {
+      d.date = parseTime(d.date);
+      d.Apples = + d.Apples;
+      d.Bananas = + d.Bananas;
+      return d;
+    }).then(function(data) {
+      var datas = data.columns.slice(1).map(function(key) {
+        return data.map(function(item) {
+          return {
+            key: key,
+            date: item.date,
+            value: item[key]
+          };
+        });
+      });
+
+      var xScale = d3.scaleTime()
+      .rangeRound([0, width])
+      .domain(d3.extent(datas[0], function(data) {
+        return data.date;
+      }));
+      chart.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', 'translate('+0+','+height+')')
+      .call(d3.axisBottom(xScale));
+
+      var yScale = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0, d3.max(datas, function(d) {
+        return d3.max(d, function(d) {
+          return d.value;
+        });
+      })])
+      // .call(d3.axisLeft(yScale));
+      // chart.append('g')
+      // .attr('class', 'y-axis')
+      // .call(d3.axisLeft(yScale));
+
+      var serie = chart
+      .selectAll('.serie')
+      .data(datas)
+      .enter()
+      .append('g')
+      .attr('class', 'serie');
+      
+      serie.append('path')
+      .attr('class', 'line')
+      .attr('fill', 'none')
+      .attr('stroke', '#289F78')
+      .attr('d', d3.line().x(function(d) {
+        return xScale(d.date);
+      }).y(function(d) {
+        return yScale(d.value);
+      }));
+
+      var label = serie.selectAll('.label')
+      .data(function(d) {
+        return d;
+      })
+      .enter()
+      .append('g')
+      .attr('class', 'label')
+      .attr('transform', function(d) {
+        return 'translate(' + xScale(d.date) + ',' + yScale(d.value) + ')';
+      });
+
+      label.append('text')
+      .attr('dy', '.35em')
+      .text(function(d) {
+        return d.value;
+      })
+      .filter(function(d, i, all) {
+        return i === all.length - 1;
+      })
+      .append('tspan')
+      .attr('class', 'label-key')
+      .text(function(d) {
+        return d.key;
+      });
+
+      label.insert("rect", 'text')
+      .datum(function() {
+        return this.nextSibling.getBBox();
+      })
+      .attr('fill', 'white')
+      .attr("x", function(d) { return d.x - labelPadding; })
+      .attr("y", function(d) { return d.y - labelPadding; })
+      .attr("width", function(d) { return d.width + 2 * labelPadding; })
+      .attr("height", function(d) { return d.height + 2 * labelPadding; });
+    });
+  </script>
+</body>
+</html>
